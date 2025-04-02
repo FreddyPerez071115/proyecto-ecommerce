@@ -17,8 +17,8 @@
         @foreach ($users as $user)
         <tr>
             <td>{{ $user->id }}</td>
-            <td>{{ $user->name }}</td>
-            <td>{{ $user->email }}</td>
+            <td>{{ $user->nombre }}</td>
+            <td>{{ $user->correo }}</td>
             <td>{{ $user->role }}</td>
             <td>
                 <a href="{{ route('users.edit', $user) }}">Editar</a>

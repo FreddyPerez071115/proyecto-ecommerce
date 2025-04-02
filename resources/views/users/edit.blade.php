@@ -6,10 +6,10 @@
     @csrf
     @method('PUT')
     <label>Nombre:</label>
-    <input type="text" name="name" value="{{ $user->name }}" required>
+    <input type="text" name="nombre" value="{{ $user->nombre }}" required>
     <br>
     <label>Email:</label>
-    <input type="email" name="email" value="{{ $user->email }}" required>
+    <input type="email" name="correo" value="{{ $user->correo }}" required>
     <br>
     <label>Rol:</label>
     <select name="role" required>

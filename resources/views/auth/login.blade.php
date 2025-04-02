@@ -5,10 +5,10 @@
 <form method="POST" action="{{ route('login') }}">
     @csrf
     <label>Email:</label>
-    <input type="email" name="email" required>
+    <input type="email" name="correo" required>
     <br>
     <label>Contraseña:</label>
-    <input type="password" name="password" required>
+    <input type="password" name="clave" required>
     <br>
     <button type="submit">Ingresar</button>
 </form>

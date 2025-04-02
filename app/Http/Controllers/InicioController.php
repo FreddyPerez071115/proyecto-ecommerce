@@ -18,18 +18,23 @@ class InicioController extends Controller
     // Proceso de login
     public function login(Request $request)
     {
-        $credentials = $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required',
+        $request->validate([
+            'correo' => 'required|email',
+            'clave'  => 'required',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        // Buscar el usuario por el campo 'correo'
+        $user = \App\Models\Usuario::where('correo', $request->correo)->first();
+
+        // Si se encuentra el usuario y la contraseña es correcta (usando Hash::check)
+        if ($user && \Illuminate\Support\Facades\Hash::check($request->clave, $user->clave)) {
+            Auth::login($user);
             $request->session()->regenerate();
             return redirect()->intended('dashboard');
         }
 
         return back()->withErrors([
-            'email' => 'Las credenciales no coinciden con nuestros registros.',
+            'correo' => 'Las credenciales no coinciden con nuestros registros.',
         ]);
     }
 
@@ -43,17 +48,17 @@ class InicioController extends Controller
     public function register(Request $request)
     {
         $data = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6|confirmed',
-            'role'     => 'required|in:cliente,empleado,gerente'
+            'nombre' => 'required|string|max:255',
+            'correo' => 'required|email|unique:usuarios,correo',
+            'clave'  => 'required|string|min:6|confirmed',
+            'role'   => 'required|in:cliente,empleado,gerente',
         ]);
 
         $user = Usuario::create([
-            'name'     => $data['name'],
-            'email'    => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role'     => $data['role'],
+            'nombre' => $data['nombre'],
+            'correo' => $data['correo'],
+            'clave'  => Hash::make($data['clave']),
+            'role'   => $data['role'],
         ]);
 
         Auth::login($user);

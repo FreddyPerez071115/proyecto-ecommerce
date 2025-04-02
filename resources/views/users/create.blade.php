@@ -5,16 +5,16 @@
 <form method="POST" action="{{ route('users.store') }}">
     @csrf
     <label>Nombre:</label>
-    <input type="text" name="name" required>
+    <input type="text" name="nombre" required>
     <br>
     <label>Email:</label>
-    <input type="email" name="email" required>
+    <input type="email" name="correo" required>
     <br>
     <label>Contraseña:</label>
-    <input type="password" name="password" required>
+    <input type="password" name="clave" required>
     <br>
     <label>Confirmar Contraseña:</label>
-    <input type="password" name="password_confirmation" required>
+    <input type="password" name="clave_confirmation" required>
     <br>
     <label>Rol:</label>
     <select name="role" required>
