@@ -24,11 +24,15 @@ Route::post('/logout', [InicioController::class, 'logout'])->name('logout');
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    // CRUD de usuarios (solo para gerentes, por ejemplo)
-    Route::middleware('can:isGerente')->group(function () {
+    Route::middleware('can:isAdmin')->group(function () {
+        // Solo el administrador puede crear usuarios
         Route::get('/users', [UsuarioController::class, 'index'])->name('users.index');
         Route::get('/users/create', [UsuarioController::class, 'create'])->name('users.create');
         Route::post('/users', [UsuarioController::class, 'store'])->name('users.store');
+    });
+    Route::middleware('can:isGerenteOrAdmin')->group(function () {
+        // Solo el gerente o administrador pueden ver la lista de usuarios
+        Route::get('/users', [UsuarioController::class, 'index'])->name('users.index');
         Route::get('/users/{user}/edit', [UsuarioController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}', [UsuarioController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UsuarioController::class, 'destroy'])->name('users.destroy');

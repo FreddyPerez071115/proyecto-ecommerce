@@ -24,9 +24,14 @@ class AuthServiceProvider extends ServiceProvider
         // Registra las políticas (si las tienes definidas)
         $this->registerPolicies();
 
-        // Define la Gate para el rol gerente
-        Gate::define('isGerente', function ($user) {
-            return $user->role === 'gerente';
+        // Define la Gate para el rol administrador
+        Gate::define('isAdmin', function ($user) {
+            return $user->role === 'administrador';
+        });
+
+        // Define la Gate para el rol gerente o administrador
+        Gate::define('isGerenteOrAdmin', function ($user) {
+            return in_array($user->role, ['gerente', 'administrador']);
         });
     }
 }

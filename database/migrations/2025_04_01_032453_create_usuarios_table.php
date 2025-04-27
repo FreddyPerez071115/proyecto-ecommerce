@@ -16,7 +16,9 @@ return new class extends Migration
             $table->string('nombre')->nullable();
             $table->string('correo')->nullable()->unique();
             $table->string('clave')->nullable();
-            $table->enum('role', ['cliente', 'empleado', 'gerente'])->default('cliente');
+            $table->enum('role', ['cliente', 'administrador', 'gerente'])->default('cliente');
+            $table->boolean('es_comprador')->default(false);
+            $table->boolean('es_vendedor')->default(false);
             $table->timestamps();
         });
     }

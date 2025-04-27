@@ -14,7 +14,7 @@
     <label>Rol:</label>
     <select name="role" required>
         <option value="cliente" {{ $user->role == 'cliente' ? 'selected' : '' }}>Cliente</option>
-        <option value="empleado" {{ $user->role == 'empleado' ? 'selected' : '' }}>Empleado</option>
+        <option value="administrador" {{ $user->role == 'administrador' ? 'selected' : '' }}>Administrador</option>
         <option value="gerente" {{ $user->role == 'gerente' ? 'selected' : '' }}>Gerente</option>
     </select>
     <br>

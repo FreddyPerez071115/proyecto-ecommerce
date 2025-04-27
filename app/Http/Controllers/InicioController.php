@@ -51,7 +51,7 @@ class InicioController extends Controller
             'nombre' => 'required|string|max:255',
             'correo' => 'required|email|unique:usuarios,correo',
             'clave'  => 'required|string|min:6|confirmed',
-            'role'   => 'required|in:cliente,empleado,gerente',
+            'role'   => 'required|in:cliente,administrador,gerente',
         ]);
 
         $user = Usuario::create([

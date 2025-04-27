@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
 class UsuarioController extends Controller
 {
@@ -13,7 +14,12 @@ class UsuarioController extends Controller
      */
     public function index()
     {
-        $users = Usuario::all();
+        if (Auth::user()->role === 'gerente') {
+            $users = Usuario::where('role', 'cliente')->get();
+        } else {
+            $users = Usuario::all();
+        }
+
         return view('users.index', compact('users'));
     }
 
@@ -34,7 +40,7 @@ class UsuarioController extends Controller
             'nombre'     => 'required|string|max:255',
             'correo'     => 'required|email|unique:usuarios,correo',
             'clave'      => 'required|string|min:6|confirmed',
-            'role'       => 'required|in:cliente,empleado,gerente',
+            'role'       => 'required|in:cliente,administrador,gerente',
         ]);
 
         Usuario::create([
@@ -71,7 +77,7 @@ class UsuarioController extends Controller
         $data = $request->validate([
             'nombre'  => 'required|string|max:255',
             'correo'  => 'required|email|unique:usuarios,correo,' . $user->id,
-            'role'    => 'required|in:cliente,empleado,gerente',
+            'role'    => 'required|in:cliente,administrador,gerente',
         ]);
 
         $user->update($data);
