@@ -43,11 +43,17 @@ class UsuarioController extends Controller
             'role'       => 'required|in:cliente,administrador,gerente',
         ]);
 
+        // Determinar valores es_comprador y es_vendedor según el rol
+        $esComprador = $data['role'] === 'cliente';
+        $esVendedor = $data['role'] === 'cliente';
+
         Usuario::create([
             'nombre' => $data['nombre'],
             'correo' => $data['correo'],
             'clave'  => Hash::make($data['clave']),
             'role'   => $data['role'],
+            'es_comprador' => $esComprador,
+            'es_vendedor' => $esVendedor,
         ]);
 
         return redirect()->route('users.index')->with('success', 'Usuario creado correctamente');
@@ -80,7 +86,18 @@ class UsuarioController extends Controller
             'role'    => 'required|in:cliente,administrador,gerente',
         ]);
 
-        $user->update($data);
+        // Determinar valores es_comprador y es_vendedor según el rol
+        $esComprador = $data['role'] === 'cliente';
+        $esVendedor = $data['role'] === 'cliente';
+
+        $user->update([
+            'nombre' => $data['nombre'],
+            'correo' => $data['correo'],
+            'role'   => $data['role'],
+            'es_comprador' => $esComprador,
+            'es_vendedor' => $esVendedor,
+        ]);
+
         return redirect()->route('users.index')->with('success', 'Usuario actualizado correctamente');
     }
 

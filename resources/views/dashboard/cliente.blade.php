@@ -1,10 +1,17 @@
 @extends('layouts.app')
 
 @section('content')
-<h2>Dashboard Cliente</h2>
-<p>Opciones disponibles para clientes.</p>
-<form method="POST" action="{{ route('logout') }}">
-    @csrf
-    <button type="submit">Cerrar Sesión</button>
-</form>
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2>Dashboard Cliente</h2>
+        </div>
+        <div class="card-body">
+            <p>Opciones disponibles para clientes.</p>
+
+            <div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection

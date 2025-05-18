@@ -1,4 +1,3 @@
-<!-- filepath: resources/views/productos/index.blade.php -->
 @extends('layouts.app')
 
 @section('content')
@@ -24,6 +23,8 @@
         @endforeach
     </div>
 
-    {{ $productos->links() }}
+    <div class="pagination">
+        {{ $productos->links() }}
+    </div>
 </div>
 @endsection

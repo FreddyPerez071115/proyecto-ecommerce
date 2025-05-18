@@ -1,11 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-<h2>Dashboard Gerente</h2>
-<p>Herramientas de administración y acceso al CRUD de usuarios.</p>
-<a href="{{ route('users.index') }}">Administrar Usuarios</a>
-<form method="POST" action="{{ route('logout') }}">
-    @csrf
-    <button type="submit">Cerrar Sesión</button>
-</form>
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h2>Dashboard Gerente</h2>
+        </div>
+        <div class="card-body">
+            <p>Herramientas de administración y acceso al CRUD de usuarios.</p>
+
+            <div>
+                <a href="{{ route('users.index') }}" class="btn btn-primary">Administrar Usuarios</a>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
