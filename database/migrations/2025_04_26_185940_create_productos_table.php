@@ -17,6 +17,7 @@ return new class extends Migration
             $table->text('descripcion')->nullable();
             $table->decimal('precio', 10, 2);
             $table->integer('stock')->default(0);
+            $table->string('imagen_path')->nullable(); // Almacena la ruta de la imagen
             $table->unsignedBigInteger('usuario_id'); // Vendedor del producto
             $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
             $table->timestamps();

@@ -12,7 +12,11 @@ class ProductoController extends Controller
      */
     public function index()
     {
-        //
+        // Obtener todos los productos ordenados por más recientes
+        $productos = Producto::latest()->paginate(12);
+
+        // Pasar los productos a la vista
+        return view('productos.index', compact('productos'));
     }
 
     /**
@@ -36,7 +40,9 @@ class ProductoController extends Controller
      */
     public function show(Producto $producto)
     {
-        //
+        // Laravel ya utiliza model binding para obtener el producto
+        // Solo necesitamos pasar el producto a la vista
+        return view('productos.show', compact('producto'));
     }
 
     /**

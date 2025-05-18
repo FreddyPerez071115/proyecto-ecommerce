@@ -10,7 +10,7 @@ class Producto extends Model
     /** @use HasFactory<\Database\Factories\ProductoFactory> */
     use HasFactory;
 
-    protected $fillable = ['nombre', 'descripcion', 'precio', 'stock', 'usuario_id'];
+    protected $fillable = ['nombre', 'descripcion', 'precio', 'stock', 'imagen_path', 'usuario_id'];
 
     // Vendedor del producto
     public function usuario()

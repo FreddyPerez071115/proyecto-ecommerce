@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UsuarioController;
+use App\Http\Controllers\ProductoController;
 
 // Página principal (accesible a todos)
 Route::get('/', function () {
@@ -37,4 +38,18 @@ Route::middleware('auth')->group(function () {
         Route::put('/users/{user}', [UsuarioController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UsuarioController::class, 'destroy'])->name('users.destroy');
     });
+});
+
+// Rutas para productos (accesible a todos los usuarios autenticados)
+Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
+Route::get('/productos/{producto}', [ProductoController::class, 'show'])->name('productos.show');
+
+// Agregar estas rutas si deseas la funcionalidad completa CRUD para productos
+Route::middleware('auth')->group(function () {
+    // Rutas de gestión de productos (protegidas por autenticación)
+    Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
+    Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
+    Route::get('/productos/{producto}/edit', [ProductoController::class, 'edit'])->name('productos.edit');
+    Route::put('/productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
+    Route::delete('/productos/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
 });
