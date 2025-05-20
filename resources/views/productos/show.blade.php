@@ -28,7 +28,8 @@
 
                             <div class="d-flex justify-content-between align-items-center mt-4">
                                 <div>
-                                    <span class="badge bg-{{ $producto->stock > 0 ? 'success' : 'danger' }} p-2">
+                                    <span class="badge bg-{{ $producto->stock > 0 ? 'success' : 'danger' }} p-2 text-white">
+                                        <i class="bi bi-{{ $producto->stock > 0 ? 'check-circle' : 'x-circle' }} me-1"></i>
                                         {{ $producto->stock > 0 ? 'En stock ('.$producto->stock.')' : 'Agotado' }}
                                     </span>
                                 </div>

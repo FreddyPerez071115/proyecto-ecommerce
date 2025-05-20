@@ -18,7 +18,7 @@
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
 
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="correo">Email:</label>
                             <input type="email" id="correo" name="correo" value="{{ old('correo') }}" required class="form-control">
                             @error('correo')
@@ -26,7 +26,7 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="clave">Contraseña:</label>
                             <input type="password" id="clave" name="clave" required class="form-control">
                             @error('clave')
@@ -34,11 +34,11 @@
                             @enderror
                         </div>
 
-                        <div class="form-group text-center">
-                            <button type="submit" class="btn btn-primary btn-block mt-2">Iniciar Sesión</button>
+                        <div class="mb-3 text-center">
+                            <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
                         </div>
 
-                        <div class="form-group text-center">
+                        <div class="mb-3 text-center">
                             <p>¿No tienes cuenta? <a href="{{ route('register.form') }}">Regístrate aquí</a></p>
                         </div>
                     </form>

@@ -12,7 +12,7 @@
                     <form method="POST" action="{{ route('register') }}">
                         @csrf
 
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="nombre">Nombre:</label>
                             <input type="text" id="nombre" name="nombre" value="{{ old('nombre') }}" required class="form-control">
                             @error('nombre')
@@ -20,7 +20,7 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="correo">Email:</label>
                             <input type="email" id="correo" name="correo" value="{{ old('correo') }}" required class="form-control">
                             @error('correo')
@@ -28,7 +28,7 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="clave">Contraseña:</label>
                             <input type="password" id="clave" name="clave" required class="form-control">
                             @error('clave')
@@ -36,12 +36,12 @@
                             @enderror
                         </div>
 
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="clave_confirmation">Confirmar Contraseña:</label>
                             <input type="password" id="clave_confirmation" name="clave_confirmation" required class="form-control">
                         </div>
 
-                        <div class="form-group">
+                        <div class="mb-3">
                             <label for="role">Rol:</label>
                             <select id="role" name="role" required class="form-control">
                                 <option value="cliente" selected>Cliente</option>
@@ -53,11 +53,11 @@
                             @enderror
                         </div>
 
-                        <div class="form-group text-center">
-                            <button type="submit" class="btn btn-primary btn-block mt-2">Registrarse</button>
+                        <div class="mb-3 text-center">
+                            <button type="submit" class="btn btn-primary btn-block">Registrarse</button>
                         </div>
 
-                        <div class="form-group text-center">
+                        <div class="mb-3 text-center">
                             <p>¿Ya tienes cuenta? <a href="{{ route('login.form') }}">Inicia sesión aquí</a></p>
                         </div>
                     </form>
