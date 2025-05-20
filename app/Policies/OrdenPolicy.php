@@ -27,6 +27,34 @@ class OrdenPolicy
     }
 
     /**
+     * Determina si el usuario puede ver el ticket/boucher de una orden
+     */
+    public function viewTicket(Usuario $usuario, Orden $orden): bool
+    {
+        // Solo el dueño de la venta o el gerente puede visualizar el ticket
+        return $usuario->id === $orden->usuario_id ||
+            $usuario->role === 'gerente';
+    }
+
+    /**
+     * Determina si el usuario puede ver todos los tickets/bouchers
+     */
+    public function viewAllTickets(Usuario $usuario): bool
+    {
+        // Solo el gerente puede ver todos los bouchers
+        return $usuario->role === 'gerente';
+    }
+
+    /**
+     * Determina si el usuario puede validar (aprobar) una venta
+     */
+    public function validateOrder(Usuario $usuario, Orden $orden): bool
+    {
+        // Solo el gerente puede validar (aprobar) una venta
+        return $usuario->role === 'gerente';
+    }
+
+    /**
      * Determine whether the user can create models.
      */
     public function create(Usuario $usuario): bool

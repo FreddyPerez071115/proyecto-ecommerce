@@ -18,13 +18,13 @@ class Usuario extends Authenticatable
         'es_vendedor',
     ];
 
-    // Productos que vende el usuario
+    // Productos que este usuario ha publicado (como vendedor)
     public function productos()
     {
         return $this->hasMany(Producto::class);
     }
 
-    // Órdenes de compra del usuario
+    // Órdenes que este usuario ha realizado (como comprador)
     public function ordenes()
     {
         return $this->hasMany(Orden::class);

@@ -17,4 +17,18 @@ class Categoria extends Model
     {
         return $this->belongsToMany(Producto::class);
     }
+
+    // Relación hasManyThrough para llegar a usuarios compradores a través de productos
+    // Esta es la relación clave para la consulta 6
+    public function compradores()
+    {
+        return $this->hasManyThrough(
+            Usuario::class,
+            Orden::class,
+            'usuario_id', // Clave foránea en ordenes
+            'id',         // Clave primaria en usuarios
+            'id',         // Clave primaria en categorías
+            'usuario_id'  // Clave local en ordenes
+        );
+    }
 }

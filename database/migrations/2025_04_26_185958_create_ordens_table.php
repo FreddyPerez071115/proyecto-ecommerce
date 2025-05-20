@@ -15,7 +15,15 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('usuario_id'); // Comprador
             $table->decimal('total', 10, 2);
-            $table->enum('estado', ['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'])->default('pendiente');
+            $table->enum('estado', [
+                'pendiente',     // Estado inicial
+                'validada',      // Validada por un gerente
+                'pagado',        // Pago confirmado
+                'enviado',       // En camino
+                'entregado',     // Entregada al cliente
+                'cancelado'      // Cancelada
+            ])->default('pendiente');
+            $table->string('ticket_path')->nullable(); // ¡Campo nuevo para el comprobante bancario!
             $table->foreign('usuario_id')->references('id')->on('usuarios')->onDelete('cascade');
             $table->timestamps();
         });

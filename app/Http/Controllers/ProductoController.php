@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Producto;
+use App\Models\ProductoImagen;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProductoController extends Controller
 {
@@ -12,10 +14,9 @@ class ProductoController extends Controller
      */
     public function index()
     {
-        // Obtener todos los productos ordenados por más recientes
-        $productos = Producto::latest()->paginate(12);
+        // Utiliza eager loading para cargar las imágenes junto con los productos
+        $productos = Producto::with('imagenes')->paginate(12);
 
-        // Pasar los productos a la vista
         return view('productos.index', compact('productos'));
     }
 
@@ -32,16 +33,46 @@ class ProductoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Validación...
+
+        $usuario = Auth::user();
+
+        if ($usuario->role !== 'cliente') {
+            return back()->with('error', 'Solo los clientes pueden vender productos');
+        }
+
+        // Crear producto...
+        $producto = Producto::create([
+            'nombre' => $request->nombre,
+            'descripcion' => $request->descripcion,
+            'precio' => $request->precio,
+            'stock' => $request->stock,
+            'usuario_id' => Auth::id(),
+        ]);
+
+        // Subir múltiples imágenes
+        if ($request->hasFile('imagenes')) {
+            foreach ($request->file('imagenes') as $imagen) {
+                $ruta = $imagen->store('productos', 'public');
+
+                ProductoImagen::create([
+                    'producto_id' => $producto->id,
+                    'ruta_imagen' => $ruta
+                ]);
+            }
+        }
+
+        // Redireccionar...
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Producto $producto)
+    public function show($id)
     {
-        // Laravel ya utiliza model binding para obtener el producto
-        // Solo necesitamos pasar el producto a la vista
+        $producto = Producto::with(['imagenes', 'categorias', 'usuario'])
+            ->findOrFail($id);
+
         return view('productos.show', compact('producto'));
     }
 

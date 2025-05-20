@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\Categoria;
+use Illuminate\Database\Seeder;
 
 class CategoriaSeeder extends Seeder
 {
@@ -13,6 +12,10 @@ class CategoriaSeeder extends Seeder
      */
     public function run(): void
     {
-        Categoria::factory()->count(10)->create();
+        // Asegurarse de que exista la categoría "Ofertas"
+        Categoria::factory()->ofertas()->createOne();
+
+        // Crear al menos otras 4 categorías para cumplir el requisito de 5
+        Categoria::factory(4)->create();
     }
 }
