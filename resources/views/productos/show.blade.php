@@ -73,9 +73,38 @@
                                         {{ $producto->stock > 0 ? 'En stock ('.$producto->stock.')' : 'Agotado' }}
                                     </span>
                                 </div>
-
-
                             </div>
+
+                            <!-- Botón de compra directa solamente -->
+                            @if($producto->stock > 0)
+                            <div class="mt-4">
+                                <form action="{{ route('ordenes.compra-directa') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="producto_id" value="{{ $producto->id }}">
+                                    <div class="row g-3 align-items-center">
+                                        <div class="col-auto">
+                                            <label for="cantidad" class="form-label">Cantidad:</label>
+                                            <select name="cantidad" id="cantidad" class="form-select">
+                                                @for($i = 1; $i <= min(5, $producto->stock); $i++)
+                                                    <option value="{{ $i }}">{{ $i }}</option>
+                                                    @endfor
+                                            </select>
+                                        </div>
+                                        <div class="col-auto">
+                                            <button type="submit" class="btn btn-success btn-lg">
+                                                <i class="bi bi-lightning-fill me-1"></i>Comprar Ahora
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                            @else
+                            <div class="mt-4">
+                                <button class="btn btn-secondary btn-lg" disabled>
+                                    <i class="bi bi-cart-x me-2"></i>Producto Agotado
+                                </button>
+                            </div>
+                            @endif
 
                             <!-- Categorías del producto -->
                             @if($producto->categorias->isNotEmpty())

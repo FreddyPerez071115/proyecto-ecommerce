@@ -60,6 +60,9 @@ Route::middleware(['auth'])->group(function () {
     // Listado de órdenes
     Route::get('/ordenes', [OrdenController::class, 'index'])->name('ordenes.index');
 
+    // Ruta para compra directa
+    Route::post('/ordenes/compra-directa', [OrdenController::class, 'compraDirecta'])->name('ordenes.compra-directa');
+
     // Ver detalles de una orden específica
     Route::get('/ordenes/{orden}', [OrdenController::class, 'show'])->name('ordenes.show');
 
