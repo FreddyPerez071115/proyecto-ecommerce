@@ -117,7 +117,9 @@ class DashboardController extends Controller
         $stats = [
             'ventas_pendientes' => Orden::where('estado', Orden::ESTADO_PENDIENTE)->count(),
             'ventas_validadas' => Orden::where('estado', Orden::ESTADO_VALIDADA)->count(),
-            'ventas_mes_actual' => Orden::whereMonth('created_at', now()->month)->count(),
+            'ventas_mes_actual' => Orden::whereMonth('created_at', now()->month)
+                ->whereYear('created_at', now()->year)
+                ->count(),
         ];
 
         // Órdenes pendientes que requieren validación
@@ -128,7 +130,14 @@ class DashboardController extends Controller
             ->take(10)
             ->get();
 
-        return view('dashboard.gerente', compact('stats', 'ordenesPendientes'));
+        // Últimas órdenes validadas
+        $ordenesValidadas = Orden::where('estado', Orden::ESTADO_VALIDADA)
+            ->with('usuario')
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        return view('dashboard.gerente', compact('stats', 'ordenesPendientes', 'ordenesValidadas'));
     }
 
     /**
@@ -189,11 +198,9 @@ class DashboardController extends Controller
      */
     protected function obtenerProductoMasVendido()
     {
-        // Usando withCount() con la relación ordenes para contar ventas
         return Producto::withCount(['ordenes as total_vendido' => function ($query) {
-            $query->whereHas('orden', function ($q) {
-                $q->where('estado', '!=', Orden::ESTADO_CANCELADO);
-            });
+            // Filtrar directamente en la tabla de órdenes, ya que $query ya está en esa relación
+            $query->where('estado', '!=', Orden::ESTADO_CANCELADO);
         }])
             ->orderByDesc('total_vendido')
             ->first();
@@ -208,7 +215,7 @@ class DashboardController extends Controller
 
         $categorias = Categoria::all();
         foreach ($categorias as $categoria) {
-            // Obtenemos todos los usuarios que compraron productos de esta categoría
+            // Consulta avanzada para encontrar compradores frecuentes por categoría
             $compradores = Usuario::whereHas('ordenes.productos.categorias', function ($query) use ($categoria) {
                 $query->where('categorias.id', $categoria->id);
             })
@@ -220,6 +227,7 @@ class DashboardController extends Controller
                 ->orderByDesc('ordenes_count')
                 ->first();
 
+            // Agregar a los resultados
             if ($compradores) {
                 $resultado[] = [
                     'categoria' => $categoria->nombre,

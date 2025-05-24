@@ -5,6 +5,7 @@ use App\Http\Controllers\InicioController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\OrdenController;
 
 // Página principal (accesible a todos)
 Route::get('/', function () {
@@ -52,4 +53,22 @@ Route::middleware('auth')->group(function () {
     Route::get('/productos/{producto}/edit', [ProductoController::class, 'edit'])->name('productos.edit');
     Route::put('/productos/{producto}', [ProductoController::class, 'update'])->name('productos.update');
     Route::delete('/productos/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
+});
+
+// Rutas para gestión de órdenes (protegidas con middleware de autenticación)
+Route::middleware(['auth'])->group(function () {
+    // Listado de órdenes
+    Route::get('/ordenes', [OrdenController::class, 'index'])->name('ordenes.index');
+
+    // Ver detalles de una orden específica
+    Route::get('/ordenes/{orden}', [OrdenController::class, 'show'])->name('ordenes.show');
+
+    // Ver el comprobante/ticket de una orden
+    Route::get('/ordenes/{orden}/ticket', [OrdenController::class, 'showTicket'])->name('ordenes.ticket');
+
+    // Validar una orden (solo gerentes)
+    Route::post('/ordenes/{orden}/validate', [OrdenController::class, 'validateOrder'])->name('ordenes.validate');
+
+    // Ver todos los comprobantes pendientes (solo gerentes)
+    Route::get('/tickets', [OrdenController::class, 'allTickets'])->name('ordenes.all-tickets');
 });

@@ -3,193 +3,146 @@
 namespace App\Http\Controllers;
 
 use App\Models\Orden;
+use App\Models\Usuario;
 use App\Models\Producto;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
+use App\Services\NotificacionService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Foundation\Validation\ValidatesRequests;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Routing\Controller as BaseController;
+use Illuminate\Support\Facades\Log;
 
 class OrdenController extends BaseController
 {
-    use AuthorizesRequests, ValidatesRequests;
+    use AuthorizesRequests;
 
     public function __construct()
     {
-        // Aplicar middleware de autenticación a todos los métodos
         $this->middleware('auth');
     }
 
     /**
-     * Display a listing of the resource.
+     * Display a listing of the orders with filtering options
      */
-    public function index()
+    public function index(Request $request)
     {
-        // El usuario común solo ve sus órdenes, admin/gerente ven todas
-        $usuario = Auth::user();
+        // Verificar autorización - solo administradores y gerentes pueden ver todas las órdenes
+        $this->authorize('viewAny', Orden::class);
 
-        if (in_array($usuario->role, ['administrador', 'gerente'])) {
-            $ordenes = Orden::with('usuario')->orderBy('created_at', 'desc')->paginate(10);
-        } else {
-            $ordenes = Orden::where('usuario_id', $usuario->id)
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+        // Parámetros de filtrado
+        $estado = $request->estado;
+        $fechaInicio = $request->fecha_inicio;
+        $fechaFin = $request->fecha_fin;
+        $busqueda = $request->busqueda;
+
+        // Consulta base
+        $query = Orden::query()->with(['usuario', 'productos']);
+
+        // Aplicar filtros si están presentes
+        if ($estado) {
+            $query->where('estado', $estado);
         }
 
-        return view('ordenes.index', compact('ordenes'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        // Este método probablemente no se use directamente ya que las órdenes
-        // se crean generalmente desde el carrito de compras
-        return redirect()->route('cart.index')
-            ->with('info', 'Las órdenes se crean desde el carrito de compras');
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        // Validación de datos
-        $request->validate([
-            'total' => 'required|numeric|min:0',
-            'productos' => 'required|array',
-            'productos.*.id' => 'required|exists:productos,id',
-            'productos.*.cantidad' => 'required|integer|min:1',
-        ]);
-
-        // Crear la orden
-        $orden = Orden::create([
-            'usuario_id' => Auth::id(),
-            'total' => $request->total,
-            'estado' => Orden::ESTADO_PENDIENTE
-        ]);
-
-        // Guardar los productos relacionados con sus cantidades y precios
-        foreach ($request->productos as $item) {
-            $producto = Producto::findOrFail($item['id']);
-            $orden->productos()->attach($producto->id, [
-                'cantidad' => $item['cantidad'],
-                'precio_unitario' => $producto->precio
-            ]);
-
-            // Actualizar el stock del producto
-            $producto->stock -= $item['cantidad'];
-            $producto->save();
+        if ($fechaInicio) {
+            $query->whereDate('created_at', '>=', $fechaInicio);
         }
 
-        return redirect()->route('ordenes.show', $orden)
-            ->with('success', 'Orden creada correctamente. Por favor, sube tu comprobante de pago.');
+        if ($fechaFin) {
+            $query->whereDate('created_at', '<=', $fechaFin);
+        }
+
+        if ($busqueda) {
+            $query->where(function ($q) use ($busqueda) {
+                $q->whereHas('usuario', function ($userQuery) use ($busqueda) {
+                    $userQuery->where('nombre', 'like', "%{$busqueda}%")
+                        ->orWhere('correo', 'like', "%{$busqueda}%");
+                })
+                    ->orWhere('id', 'like', "%{$busqueda}%");
+            });
+        }
+
+        // Ordenar por fecha de creación (las más recientes primero)
+        $query->orderBy('created_at', 'desc');
+
+        // Paginar resultados
+        $ordenes = $query->paginate(15);
+
+        // Obtener estados disponibles para el filtro
+        $estados = [
+            Orden::ESTADO_PENDIENTE => 'Pendiente',
+            Orden::ESTADO_VALIDADA => 'Validada',
+            Orden::ESTADO_PAGADO => 'Pagado',
+            Orden::ESTADO_ENVIADO => 'Enviado',
+            Orden::ESTADO_ENTREGADO => 'Entregado',
+            Orden::ESTADO_CANCELADO => 'Cancelado'
+        ];
+
+        return view('ordenes.index', compact('ordenes', 'estados', 'estado', 'fechaInicio', 'fechaFin', 'busqueda'));
     }
 
     /**
-     * Display the specified resource.
+     * Show the details of a specific order
      */
     public function show(Orden $orden)
     {
-        // Verificar si el usuario puede ver esta orden
+        // Verificar autorización
         $this->authorize('view', $orden);
 
-        // Cargar relaciones necesarias
-        $orden->load(['usuario', 'productos']);
+        // Cargar relaciones necesarias para mostrar detalles completos
+        $orden->load(['usuario', 'productos.usuario', 'productos.categorias']);
 
         return view('ordenes.show', compact('orden'));
     }
 
     /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Orden $orden)
-    {
-        // Verificar si el usuario puede editar esta orden
-        $this->authorize('update', $orden);
-
-        return view('ordenes.edit', compact('orden'));
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Orden $orden)
-    {
-        // Verificar si el usuario puede actualizar esta orden
-        $this->authorize('update', $orden);
-
-        $request->validate([
-            'estado' => 'sometimes|in:pendiente,validada,pagado,enviado,entregado,cancelado',
-            'ticket' => 'sometimes|file|image|max:2048',
-        ]);
-
-        // Actualizar datos básicos
-        if ($request->has('estado')) {
-            $orden->estado = $request->estado;
-        }
-
-        // Subir comprobante de pago si se proporciona
-        if ($request->hasFile('ticket')) {
-            $this->subirTicket($orden, $request->file('ticket'));
-        }
-
-        $orden->save();
-
-        return redirect()->route('ordenes.show', $orden)
-            ->with('success', 'Orden actualizada correctamente');
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Orden $orden)
-    {
-        // Verificar si el usuario puede eliminar esta orden
-        $this->authorize('delete', $orden);
-
-        // Solo permitir eliminación si está pendiente
-        if ($orden->estado !== Orden::ESTADO_PENDIENTE) {
-            return redirect()->route('ordenes.show', $orden)
-                ->with('error', 'No se puede eliminar una orden que no esté pendiente');
-        }
-
-        // Restaurar stock de productos
-        foreach ($orden->productos as $producto) {
-            $cantidad = $producto->pivot->cantidad;
-            $producto->stock += $cantidad;
-            $producto->save();
-        }
-
-        // Eliminar ticket si existe
-        if ($orden->ticket_path && Storage::disk('private')->exists($orden->ticket_path)) {
-            Storage::disk('private')->delete($orden->ticket_path);
-        }
-
-        $orden->delete();
-
-        return redirect()->route('ordenes.index')
-            ->with('success', 'Orden eliminada correctamente');
-    }
-
-    /**
-     * Show the ticket/voucher for an order
+     * Display the ticket/receipt for an order
      */
     public function showTicket(Orden $orden)
     {
-        // Verifica si el usuario puede ver este ticket específico
+        // Verificar autorización
         $this->authorize('viewTicket', $orden);
 
-        // Verificar que existe un ticket
-        if (!$orden->ticket_path || !Storage::disk('private')->exists($orden->ticket_path)) {
-            return redirect()->route('ordenes.show', $orden)
-                ->with('error', 'No hay comprobante de pago para esta orden');
+        // Verificar si la orden tiene un ticket
+        if (!$orden->ticket_path) {
+            return back()->with('error', 'Esta orden no tiene un comprobante adjunto.');
         }
 
-        // Servir el archivo
-        return Storage::disk('private');
+        // Obtener el path completo del archivo
+        $path = Storage::disk('private')->path($orden->ticket_path);
+
+        // Verificar que el archivo exista
+        if (!file_exists($path)) {
+            return back()->with('error', 'No se pudo encontrar el archivo del comprobante.');
+        }
+
+        // Obtener mime type y mostrar la imagen
+        $mimeType = mime_content_type($path);
+        $content = file_get_contents($path);
+
+        // Devolver respuesta con el contenido del archivo
+        return Response::make($content, 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="comprobante-orden-' . $orden->id . '"'
+        ]);
+    }
+
+    /**
+     * Display a page with all pending tickets for review
+     */
+    public function allTickets()
+    {
+        // Verificar autorización
+        $this->authorize('viewAllTickets', Orden::class);
+
+        // Obtener órdenes pendientes con tickets
+        $ordenes = Orden::where('estado', Orden::ESTADO_PENDIENTE)
+            ->whereNotNull('ticket_path')
+            ->with('usuario')
+            ->orderBy('created_at', 'desc')
+            ->paginate(12);
+
+        return view('ordenes.tickets', compact('ordenes'));
     }
 
     /**
@@ -212,69 +165,11 @@ class OrdenController extends BaseController
                 ->with('error', 'No se puede validar una orden sin comprobante de pago');
         }
 
+        // Cambiar estado a validada
         $orden->estado = Orden::ESTADO_VALIDADA;
         $orden->save();
 
         return redirect()->route('ordenes.show', $orden)
-            ->with('success', 'Orden validada correctamente');
-    }
-
-    /**
-     * Upload a ticket/voucher for an order
-     */
-    public function uploadTicket(Request $request, Orden $orden)
-    {
-        // Verificar si el usuario puede actualizar esta orden
-        $this->authorize('update', $orden);
-
-        $request->validate([
-            'ticket' => 'required|file|image|max:2048',
-        ]);
-
-        if ($this->subirTicket($orden, $request->file('ticket'))) {
-            return redirect()->route('ordenes.show', $orden)
-                ->with('success', 'Comprobante de pago subido correctamente');
-        }
-
-        return redirect()->route('ordenes.show', $orden)
-            ->with('error', 'No se pudo subir el comprobante de pago');
-    }
-
-    /**
-     * Helper method to upload ticket
-     */
-    private function subirTicket(Orden $orden, $file)
-    {
-        if ($file) {
-            // Eliminar ticket anterior si existe
-            if ($orden->ticket_path && Storage::disk('private')->exists($orden->ticket_path)) {
-                Storage::disk('private')->delete($orden->ticket_path);
-            }
-
-            // Guardar nuevo ticket
-            $path = $file->store('tickets', 'private');
-            $orden->ticket_path = $path;
-            $orden->save();
-
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * View all tickets (only for managers)
-     */
-    public function allTickets()
-    {
-        // Verificar si el usuario puede ver todos los tickets
-        $this->authorize('viewAllTickets', Orden::class);
-
-        $ordenes = Orden::whereNotNull('ticket_path')
-            ->with('usuario')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        return view('ordenes.tickets', compact('ordenes'));
+            ->with('success', 'Orden validada correctamente. Se han enviado notificaciones por correo.');
     }
 }

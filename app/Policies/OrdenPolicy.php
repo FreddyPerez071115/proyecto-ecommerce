@@ -13,7 +13,8 @@ class OrdenPolicy
      */
     public function viewAny(Usuario $usuario): bool
     {
-        return true;
+        // Solo administradores y gerentes pueden ver el listado completo de órdenes
+        return in_array($usuario->role, ['administrador', 'gerente']);
     }
 
     /**
@@ -21,81 +22,44 @@ class OrdenPolicy
      */
     public function view(Usuario $usuario, Orden $orden): bool
     {
-        // El usuario puede ver sus propias órdenes o administradores/gerentes pueden ver cualquiera
-        return $usuario->id === $orden->usuario_id ||
-            in_array($usuario->role, ['administrador', 'gerente']);
+        // El cliente solo puede ver sus propias órdenes
+        if ($usuario->role === 'cliente') {
+            return $orden->usuario_id === $usuario->id;
+        }
+        
+        // Administradores y gerentes pueden ver todas
+        return in_array($usuario->role, ['administrador', 'gerente']);
     }
 
     /**
-     * Determina si el usuario puede ver el ticket/boucher de una orden
+     * Determine whether the user can view the ticket.
      */
     public function viewTicket(Usuario $usuario, Orden $orden): bool
     {
-        // Solo el dueño de la venta o el gerente puede visualizar el ticket
-        return $usuario->id === $orden->usuario_id ||
-            $usuario->role === 'gerente';
+        // El cliente solo puede ver el ticket de sus propias órdenes
+        if ($usuario->role === 'cliente') {
+            return $orden->usuario_id === $usuario->id;
+        }
+        
+        // Administradores y gerentes pueden ver todos los tickets
+        return in_array($usuario->role, ['administrador', 'gerente']);
     }
 
     /**
-     * Determina si el usuario puede ver todos los tickets/bouchers
+     * Determine whether the user can view all tickets.
      */
     public function viewAllTickets(Usuario $usuario): bool
     {
-        // Solo el gerente puede ver todos los bouchers
+        // Solo gerentes pueden ver la página de todos los tickets
         return $usuario->role === 'gerente';
     }
 
     /**
-     * Determina si el usuario puede validar (aprobar) una venta
+     * Determine whether the user can validate orders.
      */
     public function validateOrder(Usuario $usuario, Orden $orden): bool
     {
-        // Solo el gerente puede validar (aprobar) una venta
+        // Solo gerentes pueden validar órdenes
         return $usuario->role === 'gerente';
-    }
-
-    /**
-     * Determine whether the user can create models.
-     */
-    public function create(Usuario $usuario): bool
-    {
-        return $usuario->es_comprador || in_array($usuario->role, ['administrador', 'gerente']);
-    }
-
-    /**
-     * Determine whether the user can update the model.
-     */
-    public function update(Usuario $usuario, Orden $orden): bool
-    {
-        // Sólo el administrador o gerente puede actualizar órdenes
-        // También permitimos que el comprador actualice si está pendiente
-        return in_array($usuario->role, ['administrador', 'gerente']) ||
-            ($usuario->id === $orden->usuario_id && $orden->estado === 'pendiente');
-    }
-
-    /**
-     * Determine whether the user can delete the model.
-     */
-    public function delete(Usuario $usuario, Orden $orden): bool
-    {
-        // Solo administradores o el usuario que creó la orden (si está pendiente)
-        return $usuario->role === 'administrador' ||
-            ($usuario->id === $orden->usuario_id && $orden->estado === 'pendiente');
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(Usuario $usuario, Orden $orden): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(Usuario $usuario, Orden $orden): bool
-    {
-        return false;
     }
 }

@@ -2,8 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,7 +11,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Llamar a seeders específicos en orden correcto
         $this->call([
+            UsuarioSeeder::class,
             CategoriaSeeder::class,
             ProductoSeeder::class,
             OrdenSeeder::class,

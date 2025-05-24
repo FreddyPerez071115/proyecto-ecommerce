@@ -4,6 +4,25 @@
 <div class="container">
     <h1>Dashboard Administrativo</h1>
 
+    <!-- Botones de administración -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h2 class="fs-4 fw-bold m-0">Herramientas de Administración</h2>
+                </div>
+                <div class="card-body">
+                    <p>Opciones exclusivas para administradores:</p>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('users.index') }}" class="btn btn-primary">
+                            <i class="bi bi-people"></i> Administrar Usuarios
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row mb-4">
         <!-- Estadísticas generales -->
         <div class="col-md-3">
