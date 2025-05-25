@@ -65,7 +65,7 @@ Route::middleware(['auth', 'can:isCliente'])->group(function () {
 });
 
 // Rutas para órdenes
-Route::middleware(['auth', 'can:isCliente'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     // Listado de órdenes (con filtro en el controlador según rol)
     Route::get('/ordenes', [OrdenController::class, 'index'])->name('ordenes.index');
 

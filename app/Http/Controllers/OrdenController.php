@@ -19,9 +19,13 @@ class OrdenController extends BaseController
 {
     use AuthorizesRequests;
 
-    public function __construct()
+    // Agregar al constructor para inyectar el servicio
+    private $notificacionService;
+
+    public function __construct(NotificacionService $notificacionService)
     {
         $this->middleware('auth');
+        $this->notificacionService = $notificacionService;
     }
 
     /**
@@ -175,6 +179,9 @@ class OrdenController extends BaseController
         // Cambiar estado a validada
         $orden->estado = Orden::ESTADO_VALIDADA;
         $orden->save();
+
+        // NUEVO: Enviar notificaciones por correo
+        $this->notificacionService->enviarNotificacionesOrdenValidada($orden);
 
         return redirect()->route('ordenes.show', $orden)
             ->with('success', 'Orden validada correctamente. Se han enviado notificaciones por correo.');
