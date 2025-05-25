@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Routing\Controller;
+use Illuminate\Routing\Controller; // Asegúrate que sea Illuminate\Routing\Controller o tu BaseController
 
 class ProductoController extends Controller
 {
@@ -22,19 +22,27 @@ class ProductoController extends Controller
      */
     public function index(Request $request)
     {
-        // Verificar que el usuario puede ver productos
-        $this->authorize('viewAny', Producto::class);
+        // Cualquiera puede ver el listado de productos, la autorización se aplica si es necesaria
+        // $this->authorize('viewAny', Producto::class); // Descomentar si solo usuarios auth pueden ver
 
-        $query = Producto::with('imagenes', 'usuario', 'categorias');
+        $query = Producto::with('imagenes', 'usuario', 'categorias')->where('stock', '>', 0); // Mostrar solo productos con stock
 
         // Filtros
-        if ($request->has('busqueda')) {
-            $query->where('nombre', 'like', '%' . $request->busqueda . '%')
-                ->orWhere('descripcion', 'like', '%' . $request->busqueda . '%');
+        if ($request->has('busqueda') && !empty($request->busqueda)) {
+            $query->where(function ($q) use ($request) {
+                $q->where('nombre', 'like', '%' . $request->busqueda . '%')
+                    ->orWhere('descripcion', 'like', '%' . $request->busqueda . '%');
+            });
         }
 
-        // Si es un usuario cliente, puede ver todos los productos o filtrar solo sus productos
-        if (Auth::user()->role === 'cliente' && $request->mis_productos) {
+        if ($request->has('categoria') && !empty($request->categoria)) {
+            $query->whereHas('categorias', function ($q) use ($request) {
+                $q->where('categorias.id', $request->categoria);
+            });
+        }
+
+        // Si el usuario está autenticado y es un cliente, y solicita "mis productos"
+        if (Auth::check() && Auth::user()->role === 'cliente' && $request->has('mis_productos')) {
             $query->where('usuario_id', Auth::id());
         }
 
@@ -48,15 +56,18 @@ class ProductoController extends Controller
                 $query->orderBy('precio', 'desc');
                 break;
             case 'populares':
-                $query->withCount('ordenes')->orderBy('ordenes_count', 'desc');
+                // Necesitarías una relación o campo para "populares", por ejemplo, contar ventas
+                // $query->withCount('ordenItems')->orderBy('orden_items_count', 'desc'); // Asumiendo relación ordenItems
+                $query->orderBy('created_at', 'desc'); // Placeholder
                 break;
-            default:
+            default: // recientes
                 $query->orderBy('created_at', 'desc');
         }
 
-        $productos = $query->paginate(12);
+        $productos = $query->paginate(12)->appends($request->query());
+        $categoriasFiltro = Categoria::orderBy('nombre')->get(); // Para el dropdown de filtro
 
-        return view('productos.index', compact('productos'));
+        return view('productos.index', compact('productos', 'categoriasFiltro'));
     }
 
     /**
@@ -64,27 +75,20 @@ class ProductoController extends Controller
      */
     public function create()
     {
-        // Verificar que el usuario puede crear productos
         $this->authorize('create', Producto::class);
 
         try {
-            // Registrar entrada al método para depuración
-            Log::info('ProductoController@create: Iniciando método');
-
-            // Cargar categorías
-            $categorias = Categoria::all();
+            Log::info('ProductoController@create: Iniciando método por User ID: ' . (Auth::id() ?? 'Guest'));
+            $categorias = Categoria::orderBy('nombre')->get();
             Log::info('ProductoController@create: Categorías cargadas: ' . $categorias->count());
-
-            // Retornar vista
             Log::info('ProductoController@create: Renderizando vista productos.create');
             return view('productos.create', compact('categorias'));
+        } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
+            Log::warning('ProductoController@create: Intento de acceso no autorizado por User ID: ' . (Auth::id() ?? 'Guest'));
+            return redirect()->route('productos.index')->with('error', 'No tienes permiso para crear productos.');
         } catch (\Exception $e) {
-            // Registrar cualquier error
-            Log::error('ProductoController@create: Error: ' . $e->getMessage());
-
-            // Redireccionar con mensaje de error
-            return redirect()->route('productos.index')
-                ->with('error', 'Error al cargar el formulario de creación: ' . $e->getMessage());
+            Log::error('ProductoController@create: Error: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
+            return redirect()->route('productos.index')->with('error', 'Error al cargar el formulario de creación: ' . $e->getMessage());
         }
     }
 
@@ -93,39 +97,35 @@ class ProductoController extends Controller
      */
     public function store(Request $request)
     {
-        // Verifica permisos con authorize (que viene del trait AuthorizesRequests)
         $this->authorize('create', Producto::class);
 
-        // Validación
         $validated = $request->validate([
-            'nombre' => 'required|max:255',
-            'descripcion' => 'required',
-            'precio' => 'required|numeric|min:0',
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'required|string',
+            'precio' => 'required|numeric|min:0.01',
             'stock' => 'required|integer|min:0',
-            'imagenes.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'categorias' => 'array|exists:categorias,id'
+            'imagenes.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048', // Max 2MB por imagen
+            'imagenes' => 'max:5', // Limitar a 5 imágenes
+            'categorias' => 'nullable|array',
+            'categorias.*' => 'exists:categorias,id'
         ]);
 
-        // Crear producto
-        $producto = Producto::create([
-            'nombre' => $request->nombre,
-            'descripcion' => $request->descripcion,
-            'precio' => $request->precio,
-            'stock' => $request->stock,
-            'usuario_id' => Auth::id(),
-        ]);
+        $producto = new Producto();
+        $producto->nombre = $validated['nombre'];
+        $producto->descripcion = $validated['descripcion'];
+        $producto->precio = $validated['precio'];
+        $producto->stock = $validated['stock'];
+        $producto->usuario_id = Auth::id();
+        $producto->save();
 
-        // Asociar categorías si existen
-        if ($request->has('categorias')) {
-            $producto->categorias()->attach($request->categorias);
+        if (!empty($validated['categorias'])) {
+            $producto->categorias()->attach($validated['categorias']);
         }
 
-        // Subir múltiples imágenes
         if ($request->hasFile('imagenes')) {
-            foreach ($request->file('imagenes') as $imagen) {
-                $nombreArchivo = Str::random(10) . '_' . time() . '.' . $imagen->getClientOriginalExtension();
-                $ruta = $imagen->storeAs('productos', $nombreArchivo, 'public');
-
+            foreach ($request->file('imagenes') as $imagenFile) {
+                $nombreArchivo = Str::slug($producto->nombre) . '_' . time() . '_' . Str::random(5) . '.' . $imagenFile->getClientOriginalExtension();
+                $ruta = $imagenFile->storeAs('productos', $nombreArchivo, 'public');
                 ProductoImagen::create([
                     'producto_id' => $producto->id,
                     'ruta_imagen' => $ruta
@@ -133,34 +133,18 @@ class ProductoController extends Controller
             }
         }
 
-        return redirect()->route('productos.show', $producto)
-            ->with('success', 'Producto creado correctamente');
+        return redirect()->route('productos.show', $producto)->with('success', 'Producto creado correctamente.');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(Producto $producto) // Route Model Binding
     {
-        $producto = Producto::with(['imagenes', 'categorias', 'usuario'])
-            ->findOrFail($id);
-
-        // Verificar que el usuario puede ver este producto
         $this->authorize('view', $producto);
+        $producto->load('imagenes', 'usuario', 'categorias'); // Cargar relaciones
 
-        // Verificar si el usuario es cliente (para mostrar o no el botón de compra)
-        $puedeComprar = false;
-        if (Auth::check()) {
-            $puedeComprar = Auth::user()->role === 'cliente';
-        }
-
-        // Verificar si el usuario es dueño del producto o gerente (para mostrar opciones de edición)
-        $puedeEditar = Auth::check() && (
-            Auth::id() === $producto->usuario_id ||
-            in_array(Auth::user()->role, ['gerente', 'administrador'])
-        );
-
-        return view('productos.show', compact('producto', 'puedeComprar', 'puedeEditar'));
+        return view('productos.show', compact('producto'));
     }
 
     /**
@@ -168,10 +152,10 @@ class ProductoController extends Controller
      */
     public function edit(Producto $producto)
     {
-        // Verificar que el usuario puede actualizar este producto
         $this->authorize('update', $producto);
+        $producto->load('imagenes', 'categorias');
 
-        $categorias = Categoria::all();
+        $categorias = Categoria::orderBy('nombre')->get();
         $categoriasSeleccionadas = $producto->categorias->pluck('id')->toArray();
 
         return view('productos.edit', compact('producto', 'categorias', 'categoriasSeleccionadas'));
@@ -182,44 +166,39 @@ class ProductoController extends Controller
      */
     public function update(Request $request, Producto $producto)
     {
-        // Verificar que el usuario puede actualizar este producto
         $this->authorize('update', $producto);
 
-        // Validación
         $validated = $request->validate([
-            'nombre' => 'required|max:255',
-            'descripcion' => 'required',
-            'precio' => 'required|numeric|min:0',
+            'nombre' => 'required|string|max:255',
+            'descripcion' => 'required|string',
+            'precio' => 'required|numeric|min:0.01',
             'stock' => 'required|integer|min:0',
-            'imagenes.*' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
-            'categorias' => 'array|exists:categorias,id',
-            'eliminar_imagenes' => 'array'
+            'imagenes.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'imagenes' => 'max:5',
+            'categorias' => 'nullable|array',
+            'categorias.*' => 'exists:categorias,id',
+            'eliminar_imagenes' => 'nullable|array',
+            'eliminar_imagenes.*' => 'exists:producto_imagenes,id'
         ]);
 
-        // Actualizar producto
-        $producto->update([
-            'nombre' => $request->nombre,
-            'descripcion' => $request->descripcion,
-            'precio' => $request->precio,
-            'stock' => $request->stock
-        ]);
+        $producto->nombre = $validated['nombre'];
+        $producto->descripcion = $validated['descripcion'];
+        $producto->precio = $validated['precio'];
+        $producto->stock = $validated['stock'];
+        $producto->save();
 
-        // Actualizar categorías
-        if ($request->has('categorias')) {
-            $producto->categorias()->sync($request->categorias);
+        if (isset($validated['categorias'])) {
+            $producto->categorias()->sync($validated['categorias']);
         } else {
-            $producto->categorias()->detach();
+            $producto->categorias()->detach(); // Si no se envían categorías, se eliminan todas las asociaciones
         }
 
-        // Eliminar imágenes si se solicitó
-        if ($request->has('eliminar_imagenes')) {
-            foreach ($request->eliminar_imagenes as $imagenId) {
-                $imagen = ProductoImagen::find($imagenId);
-                if ($imagen && $imagen->producto_id === $producto->id) {
-                    // Eliminar archivo
-                    if (Storage::disk('public')->exists($imagen->ruta_imagen)) {
-                        Storage::disk('public')->delete($imagen->ruta_imagen);
-                    }
+        // Eliminar imágenes seleccionadas
+        if (!empty($validated['eliminar_imagenes'])) {
+            foreach ($validated['eliminar_imagenes'] as $imagenId) {
+                $imagen = ProductoImagen::where('id', $imagenId)->where('producto_id', $producto->id)->first();
+                if ($imagen) {
+                    Storage::disk('public')->delete($imagen->ruta_imagen);
                     $imagen->delete();
                 }
             }
@@ -227,10 +206,17 @@ class ProductoController extends Controller
 
         // Agregar nuevas imágenes
         if ($request->hasFile('imagenes')) {
-            foreach ($request->file('imagenes') as $imagen) {
-                $nombreArchivo = Str::random(10) . '_' . time() . '.' . $imagen->getClientOriginalExtension();
-                $ruta = $imagen->storeAs('productos', $nombreArchivo, 'public');
+            // Contar imágenes existentes para no exceder el límite
+            $imagenesExistentesCount = $producto->imagenes()->count();
+            $imagenesNuevasCount = count($request->file('imagenes'));
 
+            if (($imagenesExistentesCount + $imagenesNuevasCount) > 5) {
+                return back()->withErrors(['imagenes' => 'No puedes subir más de 5 imágenes en total.'])->withInput();
+            }
+
+            foreach ($request->file('imagenes') as $imagenFile) {
+                $nombreArchivo = Str::slug($producto->nombre) . '_' . time() . '_' . Str::random(5) . '.' . $imagenFile->getClientOriginalExtension();
+                $ruta = $imagenFile->storeAs('productos', $nombreArchivo, 'public');
                 ProductoImagen::create([
                     'producto_id' => $producto->id,
                     'ruta_imagen' => $ruta
@@ -238,8 +224,7 @@ class ProductoController extends Controller
             }
         }
 
-        return redirect()->route('productos.show', $producto)
-            ->with('success', 'Producto actualizado correctamente');
+        return redirect()->route('productos.show', $producto)->with('success', 'Producto actualizado correctamente.');
     }
 
     /**
@@ -247,20 +232,17 @@ class ProductoController extends Controller
      */
     public function destroy(Producto $producto)
     {
-        // Verificar que el usuario puede eliminar este producto
         $this->authorize('delete', $producto);
 
-        // Eliminar imágenes físicas
+        // Eliminar imágenes físicas y registros de la BD
         foreach ($producto->imagenes as $imagen) {
-            if (Storage::disk('public')->exists($imagen->ruta_imagen)) {
-                Storage::disk('public')->delete($imagen->ruta_imagen);
-            }
+            Storage::disk('public')->delete($imagen->ruta_imagen);
+            $imagen->delete(); // Esto también podría hacerse con onDelete('cascade') en la migración
         }
 
-        // Eliminar producto (las relaciones se borran por cascade)
+        $producto->categorias()->detach(); // Desasociar categorías
         $producto->delete();
 
-        return redirect()->route('productos.index')
-            ->with('success', 'Producto eliminado correctamente');
+        return redirect()->route('productos.index')->with('success', 'Producto eliminado correctamente.');
     }
 }
