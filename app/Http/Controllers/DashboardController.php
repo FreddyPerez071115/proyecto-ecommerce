@@ -8,6 +8,7 @@ use App\Models\Usuario;
 use App\Models\Producto;
 use App\Models\Orden;
 use App\Models\Categoria;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -41,13 +42,94 @@ class DashboardController extends Controller
     {
         $usuario = Auth::user();
 
-        // Obtener las órdenes recientes del cliente
+        // Obtener las órdenes del cliente (solo las más recientes)
         $ordenes = Orden::where('usuario_id', $usuario->id)
             ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
-        return view('dashboard.cliente', compact('ordenes'));
+        // Obtener los productos que el usuario tiene a la venta
+        $productos = Producto::where('usuario_id', $usuario->id)
+            ->withCount(['ordenItems as total_ventas' => function ($query) {
+                $query->select(DB::raw('SUM(cantidad)'));
+            }])
+            ->orderBy('created_at', 'desc')
+            ->take(5)
+            ->get();
+
+        // Estadísticas rápidas
+        $estadisticas = [
+            'compras' => Orden::where('usuario_id', $usuario->id)->count(),
+            'productos' => Producto::where('usuario_id', $usuario->id)->count(),
+            'ventas' => Producto::where('usuario_id', $usuario->id)
+                ->withSum('ordenItems as total_vendidos', 'cantidad')
+                ->get()
+                ->sum('total_vendidos')
+        ];
+
+        // Datos para el gráfico de ventas por mes (últimos 6 meses)
+        $ventasPorMes = $this->obtenerVentasPorMesCliente($usuario->id);
+
+        return view('dashboard.cliente', compact(
+            'ordenes',
+            'productos',
+            'estadisticas',
+            'ventasPorMes'
+        ));
+    }
+
+    /**
+     * Obtiene los datos para el gráfico de ventas por mes
+     */
+    private function obtenerVentasPorMesCliente($usuarioId)
+    {
+        // Obtener ventas de los últimos 6 meses
+        $fechaInicio = now()->subMonths(5)->startOfMonth();
+
+        $ventasMensuales = DB::table('producto_orden')  // Usa producto_orden en lugar de orden_items
+            ->join('ordens', 'producto_orden.orden_id', '=', 'ordens.id')
+            ->join('productos', 'producto_orden.producto_id', '=', 'productos.id')
+            ->where('productos.usuario_id', $usuarioId)
+            ->where('ordens.created_at', '>=', $fechaInicio)
+            ->select(
+                DB::raw('YEAR(ordens.created_at) as año'),
+                DB::raw('MONTH(ordens.created_at) as mes'),
+                DB::raw('SUM(producto_orden.cantidad * producto_orden.precio_unitario) as total')
+            )
+            ->groupBy('año', 'mes')
+            ->orderBy('año')
+            ->orderBy('mes')
+            ->get();
+
+        // Preparar datos para el gráfico
+        $labels = [];
+        $data = [];
+
+        // Crear array con todos los meses (incluso los que no tienen ventas)
+        $mesesNombres = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        $currentDate = clone $fechaInicio;
+
+        for ($i = 0; $i < 6; $i++) {
+            $año = $currentDate->year;
+            $mes = $currentDate->month;
+
+            // Buscar si hay ventas para este mes
+            $venta = $ventasMensuales->first(function ($item) use ($año, $mes) {
+                return $item->año == $año && $item->mes == $mes;
+            });
+
+            // Agregar al array de datos
+            $labels[] = $mesesNombres[$mes - 1] . ' ' . $año;
+            $data[] = $venta ? round($venta->total, 2) : 0;
+
+            // Avanzar al siguiente mes
+            $currentDate->addMonth();
+        }
+
+        return [
+            'labels' => $labels,
+            'data' => $data
+        ];
     }
 
     /**

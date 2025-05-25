@@ -14,7 +14,7 @@ class OrdenPolicy
     public function viewAny(Usuario $usuario): bool
     {
         // Solo administradores y gerentes pueden ver el listado completo de órdenes
-        return in_array($usuario->role, ['administrador', 'gerente']);
+        return in_array($usuario->role, ['cliente', 'gerente']);
     }
 
     /**
@@ -26,7 +26,7 @@ class OrdenPolicy
         if ($usuario->role === 'cliente') {
             return $orden->usuario_id === $usuario->id;
         }
-        
+
         // Administradores y gerentes pueden ver todas
         return in_array($usuario->role, ['administrador', 'gerente']);
     }
@@ -40,7 +40,7 @@ class OrdenPolicy
         if ($usuario->role === 'cliente') {
             return $orden->usuario_id === $usuario->id;
         }
-        
+
         // Administradores y gerentes pueden ver todos los tickets
         return in_array($usuario->role, ['administrador', 'gerente']);
     }

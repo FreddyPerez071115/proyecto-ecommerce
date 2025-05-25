@@ -36,13 +36,20 @@ class Orden extends Model
     public function productos()
     {
         return $this->belongsToMany(Producto::class, 'producto_orden')
-            ->withPivot('cantidad', 'precio_unitario');
+            ->withPivot('cantidad', 'precio_unitario')
+            ->withTimestamps();
     }
 
     // Usuario que realizó esta orden (comprador)
     public function usuario()
     {
         return $this->belongsTo(Usuario::class);
+    }
+
+    // Items de la orden (uno a muchos)
+    public function items()
+    {
+        return $this->hasMany(ProductoOrden::class, 'orden_id');
     }
 
     /**

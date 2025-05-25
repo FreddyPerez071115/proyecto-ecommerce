@@ -70,10 +70,16 @@ class ProductoController extends Controller
      */
     public function show($id)
     {
+        // Verificar si el usuario es cliente (para mostrar o no el botón de compra)
+        $puedeComprar = false;
+        if (Auth::check()) {
+            $puedeComprar = Auth::user()->role === 'cliente';
+        }
+
         $producto = Producto::with(['imagenes', 'categorias', 'usuario'])
             ->findOrFail($id);
 
-        return view('productos.show', compact('producto'));
+        return view('productos.show', compact('producto', 'puedeComprar'));
     }
 
     /**

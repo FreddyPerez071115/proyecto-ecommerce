@@ -42,10 +42,21 @@ class AuthServiceProvider extends ServiceProvider
             return $user->role === 'administrador';
         });
 
+        //Define la Gate para el rol gerente
+        Gate::define('isGerente', function ($user) {
+            return $user->role === 'gerente';
+        });
+
+        // Define la Gate para el rol cliente
+        Gate::define('isCliente', function ($user) {
+            return $user->role === 'cliente';
+        });
+
         // Define la Gate para el rol gerente o administrador
         Gate::define('isGerenteOrAdmin', function ($user) {
             return in_array($user->role, ['gerente', 'administrador']);
         });
+
 
         // Registrar el Dashboard policy como un Gate
         Gate::define('view-dashboard', [DashboardPolicy::class, 'viewDashboard']);

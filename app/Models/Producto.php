@@ -46,7 +46,8 @@ class Producto extends Model
     public function ordenes()
     {
         return $this->belongsToMany(Orden::class, 'producto_orden')
-            ->withPivot('cantidad', 'precio_unitario');
+            ->withPivot('cantidad', 'precio_unitario')
+            ->withTimestamps();
     }
 
     // Método para verificar si el vendedor es cliente
@@ -65,5 +66,11 @@ class Producto extends Model
     public function usuario()
     {
         return $this->belongsTo(Usuario::class);
+    }
+
+    // Relación con ProductoOrden (uno a muchos)
+    public function ordenItems()
+    {
+        return $this->hasMany(ProductoOrden::class, 'producto_id');
     }
 }

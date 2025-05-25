@@ -41,6 +41,11 @@ class OrdenController extends BaseController
         // Consulta base
         $query = Orden::query()->with(['usuario', 'productos']);
 
+        // Filtrar por usuario si es cliente
+        if (Auth::user()->role === 'cliente') {
+            $query->where('usuario_id', Auth::id());
+        }
+
         // Aplicar filtros si están presentes
         if ($estado) {
             $query->where('estado', $estado);
@@ -264,9 +269,7 @@ class OrdenController extends BaseController
 
             // Título y cabecera
             $titulo = "COMPROBANTE DE COMPRA";
-            $empresa = "MI ECOMMERCE S.A. DE C.V.";
-            $direccion = "Av. Universidad 123, Col. Centro";
-            $ciudad = "Ciudad de México, CP 45600";
+            $empresa = "TIENDA ONLINE TECHMART";
 
             // Agregar un degradado para la cabecera
             for ($i = 0; $i < 70; $i++) {
@@ -281,7 +284,7 @@ class OrdenController extends BaseController
 
             // Título en blanco sobre fondo azul
             imagestring($im, $fuenteGrande, 300, 20, $titulo, $blanco);
-            imagestring($im, $fuenteNormal, 320, 45, $empresa, $blanco);
+            imagestring($im, $fuenteNormal, 300, 45, $empresa, $blanco);
 
             // Información de la orden
             imagestring($im, $fuenteNormal, 30, 90, "ORDEN #" . $orden->id, $negro);

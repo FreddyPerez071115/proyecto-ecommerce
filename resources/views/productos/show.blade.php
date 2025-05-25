@@ -76,7 +76,7 @@
                             </div>
 
                             <!-- Botón de compra directa solamente -->
-                            @if($producto->stock > 0)
+                            @if($producto->stock > 0 && $puedeComprar)
                             <div class="mt-4">
                                 <form action="{{ route('ordenes.compra-directa') }}" method="POST">
                                     @csrf
@@ -97,6 +97,13 @@
                                         </div>
                                     </div>
                                 </form>
+                            </div>
+                            @elseif($producto->stock > 0 && !$puedeComprar)
+                            <div class="mt-4">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-info-circle"></i>
+                                    Los administradores y gerentes no pueden realizar compras en la plataforma.
+                                </div>
                             </div>
                             @else
                             <div class="mt-4">

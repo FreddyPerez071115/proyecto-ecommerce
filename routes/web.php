@@ -32,7 +32,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/users/create', [UsuarioController::class, 'create'])->name('users.create');
         Route::post('/users', [UsuarioController::class, 'store'])->name('users.store');
     });
-    Route::middleware('can:isGerenteOrAdmin')->group(function () {
+    Route::middleware('can:isGerente')->group(function () {
         // Solo el gerente o administrador pueden ver la lista de usuarios
         Route::get('/users', [UsuarioController::class, 'index'])->name('users.index');
         Route::get('/users/{user}/edit', [UsuarioController::class, 'edit'])->name('users.edit');
@@ -41,11 +41,14 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// Rutas para productos (accesible a todos los usuarios autenticados)
-Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
-Route::get('/productos/{producto}', [ProductoController::class, 'show'])->name('productos.show');
+// Rutas para visualización de productos (accesible a todos los usuarios autenticados)
+Route::middleware('auth')->group(function () {
+    Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
+    Route::get('/productos/{producto}', [ProductoController::class, 'show'])->name('productos.show');
+});
 
-// Agregar estas rutas si deseas la funcionalidad completa CRUD para productos
+// Aun no esta implementada las vistas
+// Rutas para gestión de productos
 Route::middleware('auth')->group(function () {
     // Rutas de gestión de productos (protegidas por autenticación)
     Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
@@ -55,20 +58,26 @@ Route::middleware('auth')->group(function () {
     Route::delete('/productos/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy');
 });
 
-// Rutas para gestión de órdenes (protegidas con middleware de autenticación)
-Route::middleware(['auth'])->group(function () {
-    // Listado de órdenes
+// Rutas para clientes (solo clientes pueden comprar)
+Route::middleware(['auth', 'can:isCliente'])->group(function () {
+    // Ruta para compra directa (solo clientes pueden comprar)
+    Route::post('/ordenes/compra-directa', [OrdenController::class, 'compraDirecta'])->name('ordenes.compra-directa');
+});
+
+// Rutas para órdenes
+Route::middleware(['auth', 'can:isCliente'])->group(function () {
+    // Listado de órdenes (con filtro en el controlador según rol)
     Route::get('/ordenes', [OrdenController::class, 'index'])->name('ordenes.index');
 
-    // Ruta para compra directa
-    Route::post('/ordenes/compra-directa', [OrdenController::class, 'compraDirecta'])->name('ordenes.compra-directa');
-
-    // Ver detalles de una orden específica
+    // Ver detalles de una orden específica (con verificación en controlador)
     Route::get('/ordenes/{orden}', [OrdenController::class, 'show'])->name('ordenes.show');
 
-    // Ver el comprobante/ticket de una orden
+    // Ver el comprobante/ticket de una orden (con verificación en controlador)
     Route::get('/ordenes/{orden}/ticket', [OrdenController::class, 'showTicket'])->name('ordenes.ticket');
+});
 
+// Rutas exclusivas para gerentes
+Route::middleware(['auth', 'can:isGerente'])->group(function () {
     // Validar una orden (solo gerentes)
     Route::post('/ordenes/{orden}/validate', [OrdenController::class, 'validateOrder'])->name('ordenes.validate');
 
