@@ -14,7 +14,8 @@ class OrdenPolicy
     public function viewAny(Usuario $usuario): bool
     {
         // Solo administradores y gerentes pueden ver el listado completo de órdenes
-        return in_array($usuario->role, ['cliente', 'gerente']);
+        //return in_array($usuario->role, ['cliente', 'gerente']);
+        return $usuario->role !== 'administrador';
     }
 
     /**

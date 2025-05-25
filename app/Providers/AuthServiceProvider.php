@@ -9,11 +9,9 @@ use App\Models\Usuario;
 use App\Policies\CategoriaPolicy;
 use App\Policies\OrdenPolicy;
 use App\Policies\ProductoPolicy;
-use App\Policies\UsuarioPolicy;
 use App\Policies\DashboardPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider; // Extiende la clase adecuada
 use Illuminate\Support\Facades\Gate;
-use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
 class AuthServiceProvider extends ServiceProvider
 {

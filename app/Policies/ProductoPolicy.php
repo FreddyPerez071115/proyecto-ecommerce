@@ -5,15 +5,18 @@ namespace App\Policies;
 use App\Models\Producto;
 use App\Models\Usuario;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProductoPolicy
 {
+    use HandlesAuthorization;
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(Usuario $usuario): bool
     {
-        return true;
+        return true; // Cualquier usuario autenticado puede ver productos
     }
 
     /**
@@ -21,7 +24,7 @@ class ProductoPolicy
      */
     public function view(Usuario $usuario, Producto $producto): bool
     {
-        return true;
+        return true; // Cualquier usuario autenticado puede ver un producto
     }
 
     /**
@@ -29,7 +32,8 @@ class ProductoPolicy
      */
     public function create(Usuario $usuario): bool
     {
-        return $usuario->es_vendedor || in_array($usuario->role, ['administrador', 'gerente']);
+        // Solo clientes pueden crear productos para venta
+        return $usuario->role === 'cliente';
     }
 
     /**
@@ -37,8 +41,9 @@ class ProductoPolicy
      */
     public function update(Usuario $usuario, Producto $producto): bool
     {
+        // Solo el propietario del producto o un gerente/admin pueden editarlo
         return $usuario->id === $producto->usuario_id ||
-            in_array($usuario->role, ['administrador', 'gerente']);
+            in_array($usuario->role, ['gerente', 'administrador']);
     }
 
     /**
@@ -46,23 +51,8 @@ class ProductoPolicy
      */
     public function delete(Usuario $usuario, Producto $producto): bool
     {
+        // Solo el propietario del producto o un gerente/admin pueden eliminarlo
         return $usuario->id === $producto->usuario_id ||
-            in_array($usuario->role, ['administrador', 'gerente']);
-    }
-
-    /**
-     * Determine whether the user can restore the model.
-     */
-    public function restore(Usuario $usuario, Producto $producto): bool
-    {
-        return false;
-    }
-
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
-    public function forceDelete(Usuario $usuario, Producto $producto): bool
-    {
-        return false;
+            in_array($usuario->role, ['gerente', 'administrador']);
     }
 }
