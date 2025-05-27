@@ -10,8 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Routing\Controller; // Asegúrate que sea Illuminate\Routing\Controller o tu BaseController
+use Illuminate\Routing\Controller;
 
 class ProductoController extends Controller
 {
@@ -78,16 +77,11 @@ class ProductoController extends Controller
         $this->authorize('create', Producto::class);
 
         try {
-            Log::info('ProductoController@create: Iniciando método por User ID: ' . (Auth::id() ?? 'Guest'));
             $categorias = Categoria::orderBy('nombre')->get();
-            Log::info('ProductoController@create: Categorías cargadas: ' . $categorias->count());
-            Log::info('ProductoController@create: Renderizando vista productos.create');
             return view('productos.create', compact('categorias'));
         } catch (\Illuminate\Auth\Access\AuthorizationException $e) {
-            Log::warning('ProductoController@create: Intento de acceso no autorizado por User ID: ' . (Auth::id() ?? 'Guest'));
             return redirect()->route('productos.index')->with('error', 'No tienes permiso para crear productos.');
         } catch (\Exception $e) {
-            Log::error('ProductoController@create: Error: ' . $e->getMessage() . ' Trace: ' . $e->getTraceAsString());
             return redirect()->route('productos.index')->with('error', 'Error al cargar el formulario de creación: ' . $e->getMessage());
         }
     }

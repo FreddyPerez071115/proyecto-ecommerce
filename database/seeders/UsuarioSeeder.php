@@ -40,7 +40,5 @@ class UsuarioSeeder extends Seeder
             ->count(30)
             ->vendedor()
             ->create();
-
-        // Nota: El total de clientes es 100 (70 compradores + 30 vendedores)
     }
 }

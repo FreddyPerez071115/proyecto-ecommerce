@@ -2,9 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Usuario;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
 
 /**
@@ -34,7 +32,7 @@ class UsuarioFactory extends Factory
      */
     public function comprador(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'es_comprador' => true,
         ]);
     }
@@ -44,7 +42,7 @@ class UsuarioFactory extends Factory
      */
     public function vendedor(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'es_vendedor' => true,
         ]);
     }
@@ -54,7 +52,7 @@ class UsuarioFactory extends Factory
      */
     public function administrador(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'role' => 'administrador',
         ]);
     }
@@ -64,7 +62,7 @@ class UsuarioFactory extends Factory
      */
     public function gerente(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'role' => 'gerente',
         ]);
     }

@@ -34,13 +34,11 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('can:isAdmin')->group(function () {
         // Solo el administrador puede crear usuarios
-        //Route::get('/users', [UsuarioController::class, 'index'])->name('users.index');
         Route::get('/users/create', [UsuarioController::class, 'create'])->name('users.create');
         Route::post('/users', [UsuarioController::class, 'store'])->name('users.store');
     });
     Route::middleware('can:isGerente')->group(function () {
         // Solo el gerente o administrador pueden ver la lista de usuarios
-        //Route::get('/users', [UsuarioController::class, 'index'])->name('users.index');
         Route::get('/users/{user}/edit', [UsuarioController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}', [UsuarioController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UsuarioController::class, 'destroy'])->name('users.destroy');
@@ -70,10 +68,8 @@ Route::middleware(['auth', 'can:isCliente'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     // Listado de órdenes (con filtro en el controlador según rol)
     Route::get('/ordenes', [OrdenController::class, 'index'])->name('ordenes.index');
-
     // Ver detalles de una orden específica (con verificación en controlador)
     Route::get('/ordenes/{orden}', [OrdenController::class, 'show'])->name('ordenes.show');
-
     // Ver el comprobante/ticket de una orden (con verificación en controlador)
     Route::get('/ordenes/{orden}/ticket', [OrdenController::class, 'showTicket'])->name('ordenes.ticket');
 });
@@ -82,7 +78,6 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'can:isGerente'])->group(function () {
     // Validar una orden (solo gerentes)
     Route::post('/ordenes/{orden}/validate', [OrdenController::class, 'validateOrder'])->name('ordenes.validate');
-
     // Ver todos los comprobantes pendientes (solo gerentes)
     Route::get('/tickets', [OrdenController::class, 'allTickets'])->name('ordenes.all-tickets');
 });
@@ -90,6 +85,4 @@ Route::middleware(['auth', 'can:isGerente'])->group(function () {
 // Rutas para gestión de Categorías (solo Gerentes/Administradores)
 Route::middleware(['auth', 'can:isGerente'])->group(function () {
     Route::resource('categorias', CategoriaController::class)->except(['show']);
-    // Optionally, if you want a public or different show route for categories:
-    // Route::get('/categorias/{categoria}', [CategoriaController::class, 'show'])->name('categorias.show');
 });

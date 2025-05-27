@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Producto;
 use App\Models\Usuario;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProductoPolicy

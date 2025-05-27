@@ -3,8 +3,6 @@
 namespace App\Mail;
 
 use App\Models\Orden;
-use App\Models\Usuario;
-use App\Models\Producto;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;

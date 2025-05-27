@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Orden;
-use App\Models\Usuario;
 use App\Models\Producto;
 use App\Services\NotificacionService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
