@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\OrdenController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CategoriaController; // Add this line
 
 // Página principal (accesible a todos)
 Route::get('/', function () {
@@ -26,15 +27,20 @@ Route::post('/logout', [InicioController::class, 'logout'])->name('logout');
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::middleware('can:isGerenteOrAdmin')->group(function () {
+        // Solo gerente o administrador pueden acceder al dashboard
+        Route::get('/users', [UsuarioController::class, 'index'])->name('users.index');
+    });
+
     Route::middleware('can:isAdmin')->group(function () {
         // Solo el administrador puede crear usuarios
-        Route::get('/users', [UsuarioController::class, 'index'])->name('users.index');
+        //Route::get('/users', [UsuarioController::class, 'index'])->name('users.index');
         Route::get('/users/create', [UsuarioController::class, 'create'])->name('users.create');
         Route::post('/users', [UsuarioController::class, 'store'])->name('users.store');
     });
     Route::middleware('can:isGerente')->group(function () {
         // Solo el gerente o administrador pueden ver la lista de usuarios
-        Route::get('/users', [UsuarioController::class, 'index'])->name('users.index');
+        //Route::get('/users', [UsuarioController::class, 'index'])->name('users.index');
         Route::get('/users/{user}/edit', [UsuarioController::class, 'edit'])->name('users.edit');
         Route::put('/users/{user}', [UsuarioController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UsuarioController::class, 'destroy'])->name('users.destroy');
@@ -79,4 +85,11 @@ Route::middleware(['auth', 'can:isGerente'])->group(function () {
 
     // Ver todos los comprobantes pendientes (solo gerentes)
     Route::get('/tickets', [OrdenController::class, 'allTickets'])->name('ordenes.all-tickets');
+});
+
+// Rutas para gestión de Categorías (solo Gerentes/Administradores)
+Route::middleware(['auth', 'can:isGerente'])->group(function () {
+    Route::resource('categorias', CategoriaController::class)->except(['show']);
+    // Optionally, if you want a public or different show route for categories:
+    // Route::get('/categorias/{categoria}', [CategoriaController::class, 'show'])->name('categorias.show');
 });

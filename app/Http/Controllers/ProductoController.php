@@ -144,7 +144,16 @@ class ProductoController extends Controller
         $this->authorize('view', $producto);
         $producto->load('imagenes', 'usuario', 'categorias'); // Cargar relaciones
 
-        return view('productos.show', compact('producto'));
+        $puedeComprar = false;
+        if (Auth::check()) {
+            $user = Auth::user();
+            // Verificar si el usuario es cliente y el producto tiene stock
+            if ($user->role === 'cliente' && $producto->usuario_id !== $user->id && $producto->stock > 0) {
+                $puedeComprar = true;
+            }
+        }
+
+        return view('productos.show', compact('producto', 'puedeComprar'));
     }
 
     /**

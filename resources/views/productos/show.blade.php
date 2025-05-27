@@ -102,7 +102,7 @@
                             <div class="mt-4">
                                 <div class="alert alert-info">
                                     <i class="bi bi-info-circle"></i>
-                                    Los administradores y gerentes no pueden realizar compras en la plataforma.
+                                    Los administradores, gerentes y vendedor no pueden realizar compras en la plataforma.
                                 </div>
                             </div>
                             @else

@@ -16,12 +16,15 @@
                 </div>
                 <div class="card-body">
                     <p>Acceso a funciones de gestión:</p>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex flex-wrap gap-2"> {{-- flex-wrap para mejor responsividad --}}
                         <a href="{{ route('users.index') }}" class="btn btn-primary">
                             <i class="bi bi-people"></i> Administrar Usuarios
                         </a>
                         <a href="{{ route('ordenes.index') }}" class="btn btn-success">
                             <i class="bi bi-cart-check"></i> Gestionar Órdenes
+                        </a>
+                        <a href="{{ route('categorias.index') }}" class="btn btn-info">
+                            <i class="bi bi-tags"></i> Ver Categorías
                         </a>
                     </div>
                 </div>
