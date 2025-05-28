@@ -7,7 +7,7 @@
     <div class="row justify-content-center">
         <div class="col-md-10">
             <section class="quienes-somos">
-                <h2 class="display-5 fw-bold mb-4 text-center">Quiénes Somos</h2>
+                <h2 class="display-5 fw-bold mb-4 text-center">Bienvenido a TechMart</h2>
                 <p class="lead mb-4">En <strong>TechMart</strong> nos apasiona ofrecerte la mejor experiencia de compra en línea. Desde nuestra fundación, hemos trabajado con un solo objetivo en mente: brindarte productos tecnológicos de alta calidad, precios competitivos y un servicio excepcional.</p>
 
                 <div class="card shadow-sm mb-4">

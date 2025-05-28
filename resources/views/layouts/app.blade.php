@@ -28,10 +28,10 @@
                             <a class="nav-link" href="{{ route('productos.index') }}">Productos</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Quiénes Somos</a>
+                            <a class="nav-link" href="{{ route('quienes-somos') }}">Quiénes Somos</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">Contáctanos</a>
+                            <a class="nav-link" href="{{ route('contactanos') }}">Contáctanos</a>
                         </li>
                     </ul>
                     <div class="d-flex">

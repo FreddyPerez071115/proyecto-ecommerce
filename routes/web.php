@@ -13,6 +13,19 @@ Route::get('/', function () {
     return view('welcome'); // Vista con información de la empresa, "Quiénes somos", etc.
 })->name('home');
 
+// Nueva ruta para Quiénes Somos
+Route::get('/quienes-somos', function () {
+    return view('quienes-somos');
+})->name('quienes-somos');
+
+// Nueva ruta para Contáctanos
+Route::get('/contactanos', function () {
+    return view('contactanos');
+})->name('contactanos');
+
+// Rutas de autenticación
+// ...existing code...
+
 // Rutas de autenticación
 Route::get('/login', [InicioController::class, 'showLoginForm'])->name('login.form');
 Route::post('/login', [InicioController::class, 'login'])->name('login');
@@ -47,6 +60,7 @@ Route::middleware('auth')->group(function () {
 
 // Rutas para gestión de productos (protegidas por autenticación)
 Route::middleware('auth')->group(function () {
+    Route::get('/productos/{producto}', [ProductoController::class, 'show'])->name('productos.show');
     Route::get('/productos/create', [ProductoController::class, 'create'])->name('productos.create');
     Route::post('/productos', [ProductoController::class, 'store'])->name('productos.store');
     Route::get('/productos/{producto}/edit', [ProductoController::class, 'edit'])->name('productos.edit');
@@ -56,7 +70,6 @@ Route::middleware('auth')->group(function () {
 
 // Ruta pública para mostrar todos los productos y un producto individual
 Route::get('/productos', [ProductoController::class, 'index'])->name('productos.index');
-Route::get('/productos/{producto}', [ProductoController::class, 'show'])->name('productos.show');
 
 // Rutas para clientes (solo clientes pueden comprar)
 Route::middleware(['auth', 'can:isCliente'])->group(function () {
