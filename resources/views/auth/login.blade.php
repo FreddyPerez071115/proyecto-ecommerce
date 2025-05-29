@@ -14,21 +14,30 @@
                         {{ session('error') }}
                     </div>
                     @endif
+                    @if ($errors->any() && !$errors->has('nombre') && !$errors->has('clave'))
+                    <div class="alert alert-danger">
+                        <ul>
+                            @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
 
                     <form method="POST" action="{{ route('login') }}">
                         @csrf
 
                         <div class="mb-3">
-                            <label for="correo">Email:</label>
-                            <input type="email" id="correo" name="correo" value="{{ old('correo') }}" required class="form-control">
-                            @error('correo')
+                            <label for="nombre">Nombre de Usuario:</label>
+                            <input type="text" id="nombre" name="nombre" value="{{ old('nombre') }}" required class="form-control @error('nombre') is-invalid @enderror" autofocus>
+                            @error('nombre')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
                         <div class="mb-3">
                             <label for="clave">Contraseña:</label>
-                            <input type="password" id="clave" name="clave" required class="form-control">
+                            <input type="password" id="clave" name="clave" required class="form-control @error('clave') is-invalid @enderror">
                             @error('clave')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

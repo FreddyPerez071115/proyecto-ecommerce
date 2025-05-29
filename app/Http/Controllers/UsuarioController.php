@@ -37,9 +37,9 @@ class UsuarioController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'nombre'     => 'required|string|max:255',
+            'nombre'     => 'required|string|max:255|unique:usuarios,nombre',
             'correo'     => 'required|email|unique:usuarios,correo',
-            'clave'      => 'required|string|min:6|confirmed',
+            'clave'      => 'required|string|min:5|confirmed',
             'role'       => 'required|in:cliente,administrador,gerente',
         ]);
 
@@ -81,7 +81,7 @@ class UsuarioController extends Controller
     public function update(Request $request, Usuario $user)
     {
         $data = $request->validate([
-            'nombre'  => 'required|string|max:255',
+            'nombre'  => 'required|string|max:255|unique:usuarios,nombre,' . $user->id,
             'correo'  => 'required|email|unique:usuarios,correo,' . $user->id,
             'role'    => 'required|in:cliente,administrador,gerente',
         ]);

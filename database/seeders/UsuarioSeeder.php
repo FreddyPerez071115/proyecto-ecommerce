@@ -15,18 +15,26 @@ class UsuarioSeeder extends Seeder
     {
         // Crear usuario administrador
         Usuario::factory()->create([
-            'nombre' => 'Administrador',
-            'correo' => 'admin@example.com',
-            'clave' => Hash::make('admin123'),
+            'nombre' => 'admin',
+            'correo' => 'admin@admin.com',
+            'clave' => Hash::make('nimda'),
             'role' => 'administrador',
         ]);
 
         // Crear usuario gerente
         Usuario::factory()->create([
-            'nombre' => 'Gerente',
-            'correo' => 'gerente@example.com',
-            'clave' => Hash::make('gerente123'),
+            'nombre' => 'gerente',
+            'correo' => 'gerente@gerente.com',
+            'clave' => Hash::make('etnereg'),
             'role' => 'gerente',
+        ]);
+
+        // Crear usuario cliente
+        Usuario::factory()->create([
+            'nombre' => 'cliente',
+            'correo' => 'cliente@cliente.com',
+            'clave' => Hash::make('etneilc'),
+            'role' => 'cliente',
         ]);
 
         // Crear 70 compradores
