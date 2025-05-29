@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Pagination\Paginator;
 use App\Services\NotificacionService;
+use Illuminate\Support\Facades\URL; // Importar el Facade URL
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,5 +25,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrap();
+
+        // Forzar HTTPS en producción si es necesario
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
